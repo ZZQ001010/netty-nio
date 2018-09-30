@@ -8,6 +8,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.security.Key;
 import java.util.Iterator;
 
 /**
@@ -52,7 +53,7 @@ public class NoBlockingNIOServer {
                 if(selectionKey.isAcceptable()){
                     accept();
                 }else if(selectionKey.isReadable()){
-                    read((SocketChannel) selectionKey.channel());
+                    read(selectionKey);
                 }
 
             }
@@ -78,21 +79,24 @@ public class NoBlockingNIOServer {
             }
         }
 
-    public static void read(SocketChannel socketChannel){
-            try {
-                int len = 0;
-                buffer=ByteBuffer.allocate(1024);
-                while ((len = socketChannel.read(buffer)) > 0) {
-                    buffer.flip();
-                    System.out.println(new String(buffer.array(), 0, len));
-                    buffer.clear();
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-                System.out.println("读写失败");
-                return;
+    public static void read(SelectionKey key)  {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+        int len = 0;
+        buffer=ByteBuffer.allocate(1024);
+        try {
+            while ((len = socketChannel.read(buffer)) > 0) {
+                buffer.flip();
+                System.out.println(new String(buffer.array(), 0, len));
+                buffer.clear();
             }
+        }catch (Exception e){
+            key.cancel();
+            System.out.println("客户端关闭");
         }
+
+
+
+    }
 
 
     public static void main(String[] args)  throws  Exception{
