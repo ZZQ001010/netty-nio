@@ -37,7 +37,8 @@ public class NoBlockingNIOServer {
      */
     public static  void regSelector() throws  Exception{
         selector = Selector.open();
-        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        //注册关注的事件  writer 事件来判断  通道的缓冲区是否可用
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT | SelectionKey.OP_WRITE);
     }
 
 
@@ -89,6 +90,11 @@ public class NoBlockingNIOServer {
                 System.out.println(new String(buffer.array(), 0, len));
                 buffer.clear();
             }
+
+            buffer.put("ok".getBytes());
+            buffer.flip();
+            socketChannel.write(buffer);
+            buffer.clear();
         }catch (Exception e){
             key.cancel();
             System.out.println("客户端关闭");
